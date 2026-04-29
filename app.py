@@ -1,5 +1,5 @@
 import streamlit as st
-import numpy as np
+import pandas as pd
 import joblib
 
 # Load model
@@ -30,16 +30,37 @@ PAY_AMT3 = st.number_input("Payment Amount 3", 0, 1000000)
 
 if st.button("Predict"):
 
-    # ⚠️ MUST match training feature order EXACTLY
-    input_data = np.array([[ 
-        LIMIT_BAL, 2, 2, 2, AGE,
-        PAY_0, PAY_2, PAY_3, 0, 0, 0,
-        BILL_AMT1, BILL_AMT2, BILL_AMT3, 0, 0, 0,
-        PAY_AMT1, PAY_AMT2, PAY_AMT3, 0, 0, 0
-    ]])
+    # EXACT feature match with training dataset
+    input_dict = {
+        "LIMIT_BAL": LIMIT_BAL,
+        "SEX": 2,
+        "EDUCATION": 2,
+        "MARRIAGE": 2,
+        "AGE": AGE,
+        "PAY_0": PAY_0,
+        "PAY_2": PAY_2,
+        "PAY_3": PAY_3,
+        "PAY_4": 0,
+        "PAY_5": 0,
+        "PAY_6": 0,
+        "BILL_AMT1": BILL_AMT1,
+        "BILL_AMT2": BILL_AMT2,
+        "BILL_AMT3": BILL_AMT3,
+        "BILL_AMT4": 0,
+        "BILL_AMT5": 0,
+        "BILL_AMT6": 0,
+        "PAY_AMT1": PAY_AMT1,
+        "PAY_AMT2": PAY_AMT2,
+        "PAY_AMT3": PAY_AMT3,
+        "PAY_AMT4": 0,
+        "PAY_AMT5": 0,
+        "PAY_AMT6": 0
+    }
 
-    pred = model.predict(input_data)[0]
-    prob = model.predict_proba(input_data)[0][1]
+    input_df = pd.DataFrame([input_dict])
+
+    pred = model.predict(input_df)[0]
+    prob = model.predict_proba(input_df)[0][1]
 
     st.subheader("📊 Prediction Result")
 
@@ -48,7 +69,7 @@ if st.button("Predict"):
     else:
         st.success(f"✅ Low Risk ({prob:.2f})")
 
-    # ================= SIMPLE EXPLANATION =================
+    # ================= EXPLANATION =================
 
     st.subheader("🔍 Why this prediction?")
 
