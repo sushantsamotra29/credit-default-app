@@ -14,7 +14,7 @@ st.write("Enter customer details:")
 LIMIT_BAL = st.number_input("Credit Limit", 10000, 1000000)
 AGE = st.number_input("Age", 18, 100)
 
-PAY_0 = st.number_input("PAY_0 (Recent Delay)", -2, 8)
+PAY_0 = st.number_input("PAY_0", -2, 8)
 PAY_2 = st.number_input("PAY_2", -2, 8)
 PAY_3 = st.number_input("PAY_3", -2, 8)
 
@@ -30,7 +30,7 @@ PAY_AMT3 = st.number_input("Payment Amount 3", 0, 1000000)
 
 if st.button("Predict"):
 
-    # EXACT feature match with training dataset
+    # Create full feature set EXACTLY like dataset
     input_dict = {
         "LIMIT_BAL": LIMIT_BAL,
         "SEX": 2,
@@ -59,6 +59,9 @@ if st.button("Predict"):
 
     input_df = pd.DataFrame([input_dict])
 
+    # 🔥 CRITICAL LINE (fix mismatch permanently)
+    input_df = input_df[model.feature_names_in_]
+
     pred = model.predict(input_df)[0]
     prob = model.predict_proba(input_df)[0][1]
 
@@ -82,10 +85,10 @@ if st.button("Predict"):
         reasons.append("Payment is less than recent bill")
 
     if LIMIT_BAL > 500000:
-        reasons.append("High credit limit exposure")
+        reasons.append("High credit exposure")
 
     if BILL_AMT1 > 50000:
-        reasons.append("High recent bill amount")
+        reasons.append("High recent bill")
 
     if len(reasons) == 0:
         st.info("No major risk factors detected")
