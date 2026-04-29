@@ -11,12 +11,23 @@ st.write("Enter customer details:")
 
 # ================= INPUT =================
 
-LIMIT_BAL = st.number_input("Credit Limit", 10000, 1000000)
-AGE = st.number_input("Age", 18, 100)
+# ================= INPUT =================
 
-PAY_0 = st.number_input("PAY_0", -2, 8)
-PAY_2 = st.number_input("PAY_2", -2, 8)
-PAY_3 = st.number_input("PAY_3", -2, 8)
+LIMIT_BAL = st.slider("💰 Credit Limit", 10000, 1000000, 50000)
+AGE = st.slider("🎂 Age", 18, 80, 30)
+
+SEX = st.selectbox("👤 Gender", ["Male", "Female"])
+SEX = 1 if SEX == "Male" else 2
+
+EDUCATION = st.selectbox("🎓 Education", ["Graduate", "University", "High School"])
+EDUCATION = {"Graduate":1, "University":2, "High School":3}[EDUCATION]
+
+MARRIAGE = st.selectbox("💍 Marital Status", ["Single", "Married", "Other"])
+MARRIAGE = {"Married":1, "Single":2, "Other":3}[MARRIAGE]
+
+PAY_0 = st.slider("📉 Recent Payment Delay (PAY_0)", -2, 8, 0)
+PAY_2 = st.slider("PAY_2", -2, 8, 0)
+PAY_3 = st.slider("PAY_3", -2, 8, 0)
 
 BILL_AMT1 = st.number_input("Bill Amount 1", 0, 1000000)
 BILL_AMT2 = st.number_input("Bill Amount 2", 0, 1000000)
@@ -25,36 +36,35 @@ BILL_AMT3 = st.number_input("Bill Amount 3", 0, 1000000)
 PAY_AMT1 = st.number_input("Payment Amount 1", 0, 1000000)
 PAY_AMT2 = st.number_input("Payment Amount 2", 0, 1000000)
 PAY_AMT3 = st.number_input("Payment Amount 3", 0, 1000000)
-
 # ================= PREDICTION =================
 
 if st.button("Predict"):
 
     input_dict = {
-        "LIMIT_BAL": LIMIT_BAL,
-        "SEX": 2,
-        "EDUCATION": 2,
-        "MARRIAGE": 2,
-        "AGE": AGE,
-        "PAY_0": PAY_0,
-        "PAY_2": PAY_2,
-        "PAY_3": PAY_3,
-        "PAY_4": 0,
-        "PAY_5": 0,
-        "PAY_6": 0,
-        "BILL_AMT1": BILL_AMT1,
-        "BILL_AMT2": BILL_AMT2,
-        "BILL_AMT3": BILL_AMT3,
-        "BILL_AMT4": 0,
-        "BILL_AMT5": 0,
-        "BILL_AMT6": 0,
-        "PAY_AMT1": PAY_AMT1,
-        "PAY_AMT2": PAY_AMT2,
-        "PAY_AMT3": PAY_AMT3,
-        "PAY_AMT4": 0,
-        "PAY_AMT5": 0,
-        "PAY_AMT6": 0
-    }
+    "LIMIT_BAL": LIMIT_BAL,
+    "SEX": SEX,
+    "EDUCATION": EDUCATION,
+    "MARRIAGE": MARRIAGE,
+    "AGE": AGE,
+    "PAY_0": PAY_0,
+    "PAY_2": PAY_2,
+    "PAY_3": PAY_3,
+    "PAY_4": 0,
+    "PAY_5": 0,
+    "PAY_6": 0,
+    "BILL_AMT1": BILL_AMT1,
+    "BILL_AMT2": BILL_AMT2,
+    "BILL_AMT3": BILL_AMT3,
+    "BILL_AMT4": 0,
+    "BILL_AMT5": 0,
+    "BILL_AMT6": 0,
+    "PAY_AMT1": PAY_AMT1,
+    "PAY_AMT2": PAY_AMT2,
+    "PAY_AMT3": PAY_AMT3,
+    "PAY_AMT4": 0,
+    "PAY_AMT5": 0,
+    "PAY_AMT6": 0
+}
 
     input_df = pd.DataFrame([input_dict])
 
@@ -66,15 +76,20 @@ if st.button("Predict"):
     # 🔥 reorder exactly
     input_df = input_df[model.feature_names_in_]
 
-    pred = model.predict(input_df)[0]
-    prob = model.predict_proba(input_df)[0][1]
-    st.subheader("📊 Prediction Result")
+   pred = model.predict(input_df)[0]
+prob = model.predict_proba(input_df)[0][1]
 
-    if pred == 1:
-        st.error(f"⚠️ High Risk of Default ({prob:.2f})")
-    else:
-        st.success(f"✅ Low Risk ({prob:.2f})")
+st.subheader("📊 Prediction Result")
 
+# 🔥 NEW UI PART
+st.progress(float(prob))
+
+if prob > 0.7:
+    st.error(f"🔴 High Risk ({prob:.2f})")
+elif prob > 0.4:
+    st.warning(f"🟠 Medium Risk ({prob:.2f})")
+else:
+    st.success(f"🟢 Low Risk ({prob:.2f})")
     # ================= EXPLANATION =================
 
     st.subheader("🔍 Why this prediction?")
@@ -98,6 +113,10 @@ if st.button("Predict"):
     else:
         for r in reasons:
             st.write("•", r)
+
+
+
+st.set_page_config(page_title="Credit Risk App", layout="centered")
 
 # ================= MODEL COMPARISON =================
 
