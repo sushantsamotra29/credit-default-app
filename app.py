@@ -30,7 +30,6 @@ PAY_AMT3 = st.number_input("Payment Amount 3", 0, 1000000)
 
 if st.button("Predict"):
 
-    # Create full feature set EXACTLY like dataset
     input_dict = {
         "LIMIT_BAL": LIMIT_BAL,
         "SEX": 2,
@@ -59,12 +58,16 @@ if st.button("Predict"):
 
     input_df = pd.DataFrame([input_dict])
 
-    # 🔥 CRITICAL LINE (fix mismatch permanently)
+    # 🔥 FIX: add missing columns automatically
+    for col in model.feature_names_in_:
+        if col not in input_df.columns:
+            input_df[col] = 0
+
+    # 🔥 reorder exactly
     input_df = input_df[model.feature_names_in_]
 
     pred = model.predict(input_df)[0]
     prob = model.predict_proba(input_df)[0][1]
-
     st.subheader("📊 Prediction Result")
 
     if pred == 1:
