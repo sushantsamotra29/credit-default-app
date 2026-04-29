@@ -2,14 +2,16 @@ import streamlit as st
 import pandas as pd
 import joblib
 
+# Page config
+st.set_page_config(page_title="Credit Risk App", layout="centered")
+
 # Load model
 model = joblib.load("credit.pkl")
 
+# Title
 st.title("💳 Credit Default Prediction")
 
 st.write("Enter customer details:")
-
-# ================= INPUT =================
 
 # ================= INPUT =================
 
@@ -36,60 +38,64 @@ BILL_AMT3 = st.number_input("Bill Amount 3", 0, 1000000)
 PAY_AMT1 = st.number_input("Payment Amount 1", 0, 1000000)
 PAY_AMT2 = st.number_input("Payment Amount 2", 0, 1000000)
 PAY_AMT3 = st.number_input("Payment Amount 3", 0, 1000000)
+
 # ================= PREDICTION =================
 
 if st.button("Predict"):
 
     input_dict = {
-    "LIMIT_BAL": LIMIT_BAL,
-    "SEX": SEX,
-    "EDUCATION": EDUCATION,
-    "MARRIAGE": MARRIAGE,
-    "AGE": AGE,
-    "PAY_0": PAY_0,
-    "PAY_2": PAY_2,
-    "PAY_3": PAY_3,
-    "PAY_4": 0,
-    "PAY_5": 0,
-    "PAY_6": 0,
-    "BILL_AMT1": BILL_AMT1,
-    "BILL_AMT2": BILL_AMT2,
-    "BILL_AMT3": BILL_AMT3,
-    "BILL_AMT4": 0,
-    "BILL_AMT5": 0,
-    "BILL_AMT6": 0,
-    "PAY_AMT1": PAY_AMT1,
-    "PAY_AMT2": PAY_AMT2,
-    "PAY_AMT3": PAY_AMT3,
-    "PAY_AMT4": 0,
-    "PAY_AMT5": 0,
-    "PAY_AMT6": 0
-}
+        "LIMIT_BAL": LIMIT_BAL,
+        "SEX": SEX,
+        "EDUCATION": EDUCATION,
+        "MARRIAGE": MARRIAGE,
+        "AGE": AGE,
+        "PAY_0": PAY_0,
+        "PAY_2": PAY_2,
+        "PAY_3": PAY_3,
+        "PAY_4": 0,
+        "PAY_5": 0,
+        "PAY_6": 0,
+        "BILL_AMT1": BILL_AMT1,
+        "BILL_AMT2": BILL_AMT2,
+        "BILL_AMT3": BILL_AMT3,
+        "BILL_AMT4": 0,
+        "BILL_AMT5": 0,
+        "BILL_AMT6": 0,
+        "PAY_AMT1": PAY_AMT1,
+        "PAY_AMT2": PAY_AMT2,
+        "PAY_AMT3": PAY_AMT3,
+        "PAY_AMT4": 0,
+        "PAY_AMT5": 0,
+        "PAY_AMT6": 0
+    }
 
     input_df = pd.DataFrame([input_dict])
 
-    # 🔥 FIX: add missing columns automatically
+    # Ensure all required features exist
     for col in model.feature_names_in_:
         if col not in input_df.columns:
             input_df[col] = 0
 
-    # 🔥 reorder exactly
+    # Match exact order
     input_df = input_df[model.feature_names_in_]
 
-   pred = model.predict(input_df)[0]
-prob = model.predict_proba(input_df)[0][1]
+    # Prediction
+    pred = model.predict(input_df)[0]
+    prob = model.predict_proba(input_df)[0][1]
 
-st.subheader("📊 Prediction Result")
+    # ================= OUTPUT =================
 
-# 🔥 NEW UI PART
-st.progress(float(prob))
+    st.subheader("📊 Prediction Result")
 
-if prob > 0.7:
-    st.error(f"🔴 High Risk ({prob:.2f})")
-elif prob > 0.4:
-    st.warning(f"🟠 Medium Risk ({prob:.2f})")
-else:
-    st.success(f"🟢 Low Risk ({prob:.2f})")
+    st.progress(float(prob))
+
+    if prob > 0.7:
+        st.error(f"🔴 High Risk ({prob:.2f})")
+    elif prob > 0.4:
+        st.warning(f"🟠 Medium Risk ({prob:.2f})")
+    else:
+        st.success(f"🟢 Low Risk ({prob:.2f})")
+
     # ================= EXPLANATION =================
 
     st.subheader("🔍 Why this prediction?")
@@ -106,17 +112,13 @@ else:
         reasons.append("High credit exposure")
 
     if BILL_AMT1 > 50000:
-        reasons.append("High recent bill")
+        reasons.append("High recent bill amount")
 
     if len(reasons) == 0:
         st.info("No major risk factors detected")
     else:
         for r in reasons:
             st.write("•", r)
-
-
-
-st.set_page_config(page_title="Credit Risk App", layout="centered")
 
 # ================= MODEL COMPARISON =================
 
