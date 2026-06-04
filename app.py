@@ -2,46 +2,144 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Page config
-st.set_page_config(page_title="Credit Risk App", layout="centered")
+# ---------------- PAGE CONFIG ----------------
 
-# Load model
+st.set_page_config(
+    page_title="Credit Default Prediction",
+    page_icon="💳",
+    layout="wide"
+)
+
+# ---------------- LOAD MODEL ----------------
+
 model = joblib.load("credit.pkl")
 
-# Title
+# ---------------- HEADER ----------------
+
 st.title("💳 Credit Default Prediction")
+st.markdown("Predict whether a customer is likely to default on the next month's credit card payment.")
 
-st.write("Enter customer details:")
+# ---------------- INPUT SECTION ----------------
 
-# ================= INPUT =================
+col1, col2 = st.columns(2)
 
-LIMIT_BAL = st.slider("💰 Credit Limit", 10000, 1000000, 50000)
-AGE = st.slider("🎂 Age", 18, 80, 30)
+with col1:
 
-SEX = st.selectbox("👤 Gender", ["Male", "Female"])
+    LIMIT_BAL = st.number_input(
+        "💰 Credit Limit",
+        min_value=10000,
+        max_value=1000000,
+        value=50000,
+        step=1000
+    )
+
+    AGE = st.number_input(
+        "🎂 Age",
+        min_value=18,
+        max_value=80,
+        value=30
+    )
+
+    SEX = st.selectbox(
+        "👤 Gender",
+        ["Male", "Female"]
+    )
+
+    EDUCATION = st.selectbox(
+        "🎓 Education",
+        ["Graduate", "University", "High School"]
+    )
+
+    MARRIAGE = st.selectbox(
+        "💍 Marital Status",
+        ["Single", "Married", "Other"]
+    )
+
+with col2:
+
+    PAY_0 = st.selectbox(
+        "📉 PAY_0",
+        [-2,-1,0,1,2,3,4,5,6,7,8]
+    )
+
+    PAY_2 = st.selectbox(
+        "📉 PAY_2",
+        [-2,-1,0,1,2,3,4,5,6,7,8]
+    )
+
+    PAY_3 = st.selectbox(
+        "📉 PAY_3",
+        [-2,-1,0,1,2,3,4,5,6,7,8]
+    )
+
+    BILL_AMT1 = st.number_input(
+        "Bill Amount 1",
+        min_value=0,
+        value=0,
+        step=100
+    )
+
+    BILL_AMT2 = st.number_input(
+        "Bill Amount 2",
+        min_value=0,
+        value=0,
+        step=100
+    )
+
+    BILL_AMT3 = st.number_input(
+        "Bill Amount 3",
+        min_value=0,
+        value=0,
+        step=100
+    )
+
+st.subheader("💵 Payment Information")
+
+col3, col4, col5 = st.columns(3)
+
+with col3:
+    PAY_AMT1 = st.number_input(
+        "Payment Amount 1",
+        min_value=0,
+        value=0,
+        step=100
+    )
+
+with col4:
+    PAY_AMT2 = st.number_input(
+        "Payment Amount 2",
+        min_value=0,
+        value=0,
+        step=100
+    )
+
+with col5:
+    PAY_AMT3 = st.number_input(
+        "Payment Amount 3",
+        min_value=0,
+        value=0,
+        step=100
+    )
+
+# ---------------- ENCODING ----------------
+
 SEX = 1 if SEX == "Male" else 2
 
-EDUCATION = st.selectbox("🎓 Education", ["Graduate", "University", "High School"])
-EDUCATION = {"Graduate":1, "University":2, "High School":3}[EDUCATION]
+EDUCATION = {
+    "Graduate": 1,
+    "University": 2,
+    "High School": 3
+}[EDUCATION]
 
-MARRIAGE = st.selectbox("💍 Marital Status", ["Single", "Married", "Other"])
-MARRIAGE = {"Married":1, "Single":2, "Other":3}[MARRIAGE]
+MARRIAGE = {
+    "Married": 1,
+    "Single": 2,
+    "Other": 3
+}[MARRIAGE]
 
-PAY_0 = st.slider("📉 Recent Payment Delay (PAY_0)", -2, 8, 0)
-PAY_2 = st.slider("PAY_2", -2, 8, 0)
-PAY_3 = st.slider("PAY_3", -2, 8, 0)
+# ---------------- PREDICTION ----------------
 
-BILL_AMT1 = st.number_input("Bill Amount 1", 0, 1000000)
-BILL_AMT2 = st.number_input("Bill Amount 2", 0, 1000000)
-BILL_AMT3 = st.number_input("Bill Amount 3", 0, 1000000)
-
-PAY_AMT1 = st.number_input("Payment Amount 1", 0, 1000000)
-PAY_AMT2 = st.number_input("Payment Amount 2", 0, 1000000)
-PAY_AMT3 = st.number_input("Payment Amount 3", 0, 1000000)
-
-# ================= PREDICTION =================
-
-if st.button("Predict"):
+if st.button("🚀 Predict Risk", use_container_width=True):
 
     input_dict = {
         "LIMIT_BAL": LIMIT_BAL,
@@ -71,34 +169,31 @@ if st.button("Predict"):
 
     input_df = pd.DataFrame([input_dict])
 
-    # Ensure all required features exist
     for col in model.feature_names_in_:
         if col not in input_df.columns:
             input_df[col] = 0
 
-    # Match exact order
     input_df = input_df[model.feature_names_in_]
 
-    # Prediction
     pred = model.predict(input_df)[0]
     prob = model.predict_proba(input_df)[0][1]
 
-    # ================= OUTPUT =================
-
+    st.markdown("---")
     st.subheader("📊 Prediction Result")
+
+    st.metric(
+        "Default Probability",
+        f"{prob*100:.1f}%"
+    )
 
     st.progress(float(prob))
 
-    if prob > 0.7:
-        st.error(f"🔴 High Risk ({prob:.2f})")
-    elif prob > 0.4:
-        st.warning(f"🟠 Medium Risk ({prob:.2f})")
+    if pred == 1:
+        st.error("🔴 Likely to Default")
     else:
-        st.success(f"🟢 Low Risk ({prob:.2f})")
+        st.success("🟢 Not Likely to Default")
 
-    # ================= EXPLANATION =================
-
-    st.subheader("🔍 Why this prediction?")
+    st.subheader("🔍 Risk Factors")
 
     reasons = []
 
@@ -106,29 +201,30 @@ if st.button("Predict"):
         reasons.append("Recent payment delay is high")
 
     if PAY_AMT1 < BILL_AMT1:
-        reasons.append("Payment is less than recent bill")
+        reasons.append("Payment amount is lower than outstanding bill")
 
     if LIMIT_BAL > 500000:
         reasons.append("High credit exposure")
 
     if BILL_AMT1 > 50000:
-        reasons.append("High recent bill amount")
+        reasons.append("Large outstanding bill amount")
 
-    if len(reasons) == 0:
-        st.info("No major risk factors detected")
-    else:
+    if reasons:
         for r in reasons:
             st.write("•", r)
+    else:
+        st.info("No major risk factors detected")
 
-# ================= MODEL COMPARISON =================
+# ---------------- MODEL COMPARISON ----------------
 
 st.markdown("---")
 st.subheader("📈 Model Comparison")
 
-st.write("""
-| Model | Precision | Recall | F1 Score |
-|------|----------|--------|----------|
-| Logistic Regression | 0.37 | 0.62 | 0.46 |
-| Random Forest | 0.63 | 0.36 | 0.46 |
-| XGBoost (Final Model) | 0.50 | 0.58 | 0.54 |
-""")
+comparison_df = pd.DataFrame({
+    "Model": ["Logistic Regression", "Random Forest", "XGBoost"],
+    "Precision": [0.37, 0.63, 0.50],
+    "Recall": [0.62, 0.36, 0.58],
+    "F1 Score": [0.46, 0.46, 0.54]
+})
+
+st.dataframe(comparison_df, use_container_width=True)
